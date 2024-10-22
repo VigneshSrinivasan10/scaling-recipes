@@ -1,0 +1,28 @@
+# Basic settings for a sample project
+
+# Project information
+[project]
+name = "slfm"
+description = "Scaling laws for flow matching."
+dynamic = ["version"]
+
+authors = [{ name = "Vignesh Srinivasan", email = "vignesh.mssrinivasan@gmail.com" },]
+
+dependencies = [
+    "numpy",
+    "matplotlib",
+    "tqdm",
+    "zuko",
+    "pandas",
+    "hydra-core", 
+    "torch", 
+    "ipython"
+]
+
+[tool.setuptools]
+packages = ["slfm"]  # Specify only the package(s) you want
+
+[project.scripts]
+train-flow-matching = "slfm.main:train"
+evaluate = "slfm.main:evaluate" 
+train_and_evaluate = "slfm.main:train_and_evaluate"
