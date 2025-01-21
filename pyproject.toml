@@ -16,7 +16,8 @@ dependencies = [
     "pandas",
     "hydra-core", 
     "torch", 
-    "ipython"
+    "ipython",
+    "mup"
 ]
 
 [tool.setuptools]
@@ -26,3 +27,6 @@ packages = ["slfm"]  # Specify only the package(s) you want
 train-flow-matching = "slfm.main:train"
 evaluate = "slfm.main:evaluate" 
 train_and_evaluate = "slfm.main:train_and_evaluate"
+mup_coord_check = "slfm.main:mup_coord_check"
+mup_train = "slfm.main:mup_train"
+mup_evaluate = "slfm.main:mup_evaluate"

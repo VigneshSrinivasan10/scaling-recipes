@@ -29,5 +29,5 @@ train_and_evaluate "model.time_embedding_size=${width}" "model.n_blocks=${depth}
 
 ## Thanks
 
-The project starts from a very cool [notebook](https://bm371613.github.io/conditional-flow-matching/) on flow matching.  
+The project starts from a very cool [notebook](https://bm371613.github.io/conditional-flow-matching/) on flow matching. A lot of the code for scaling is borrowed from this [guide](https://github.com/cloneofsimo/scaling-guide/).
 

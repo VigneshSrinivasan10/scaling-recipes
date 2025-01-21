@@ -1,26 +1,34 @@
 model:
-  _target_ : slfm.model.FlowNeuralNetwork
+  _target_ : slfm.model.FlowMLP
   n_features: 2
-  time_embedding_size: 8 
-  n_blocks: 5
+  width: 10
+  input_mult: 1
+  output_mult: 1
   
+mup: 
+  switch: True
+  save_base_shapes: width_10.bsh
+  coord_check_filename: coord_check_mup_10.png
+
 trainer:
-  max_epochs: 300
-  log_interval: 1
+  max_epochs: 500
+  log_interval: 10
   loss: 
     _target_: slfm.loss.ConditionalFlowMatchingLoss 
   optimizer:
-    _target_: torch.optim.AdamW
+    _target_: torch.optim.AdamW # mup.MuAdam
     lr: 0.1           # Learning rate
-    weight_decay: 0.0001  # Weight decay (L2 regularization)
-  
+    weight_decay: 0.001  # Weight decay (L2 regularization)
+    lr_scheduler: linear_decay
+    gradient_clip: 1.0
+
 data:
-  _target_: slfm.datasets.DatasetCreator
+  _target_: slfm.datasets.CustomDataset # slfm.datasets.DatasetCreator
   size: 10000
 
 logger:
   _target_: slfm.logger.Logger
-  log_dir: logs/flow_fc_${model.n_features}_${model.time_embedding_size}_${model.n_blocks}
+  log_dir: logs/flow_mup_fc_w${model.width}_lr${trainer.optimizer.lr}
   loss_dir: loss
   ckpt_dir: ckpt 
   visuals_dir: visuals

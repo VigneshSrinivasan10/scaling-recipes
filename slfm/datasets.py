@@ -1,4 +1,5 @@
 import torch
+from torch.utils.data import Dataset, DataLoader
 
 class DatasetCreator:
     def __init__(self, size: int):
@@ -20,3 +21,15 @@ class DatasetCreator:
         return X + noise
 
     
+class CustomDataset(Dataset):
+    def __init__(self, size: int):
+        self.data = DatasetCreator(size).create()
+        
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+            return self.data[idx]
+
+    def create(self, batch_size: int = 10000, shuffle: bool = True):
+        return DataLoader(self.data, batch_size=batch_size, shuffle=shuffle)

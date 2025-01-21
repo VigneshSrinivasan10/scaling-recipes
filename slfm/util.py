@@ -52,10 +52,26 @@ def run_flow(flow_model, x_0, t_0, t_1, device='cpu'):
 
 
 def plot_data(model, dataset, target_file: str = 'generated_vs_target.png') -> None:
-
+    dataset = next(iter(dataset))
     noise = torch.randn_like(dataset)
     fig, axs = plt.subplots(1, 2, figsize=(14, 7), sharex=True, sharey=True)
     plot_dataset(run_flow(model, noise, 0, 1, device='cpu').cpu(), bins=64, ax=axs[0], title='model generated dataset')
     plot_dataset(dataset, bins=64, ax=axs[1], title='target dataset')
     fig.savefig(target_file)
     plt.close()
+
+
+def linear_decay_lr(step, num_iterations, learning_rate):
+    return learning_rate * (1 - step / num_iterations)
+
+
+def warmup_cooldown_lr(
+    step, num_iterations, learning_rate, warmup_iters, warmdown_iters
+):
+    if step < warmup_iters:
+        return learning_rate * (step + 1) / warmup_iters
+    elif step < num_iterations - warmdown_iters:
+        return learning_rate
+    else:
+        decay_ratio = (num_iterations - step) / warmdown_iters
+        return learning_rate * decay_ratio
