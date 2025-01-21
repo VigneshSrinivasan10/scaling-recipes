@@ -24,19 +24,19 @@ class ZeroToOneTimeEmbedding(nn.Module):
         return emb
 
 class FlowMLP(FlowModel):
-    def __init__(self, n_features, width=10, nonlin=F.relu, output_mult=1.0, input_mult=1.0):
+    def __init__(self, n_features=2, width=10, n_blocks=5, nonlin=F.relu, output_mult=1.0, input_mult=1.0):
         super().__init__()
 
         self.nonlin = nonlin
         self.input_mult = input_mult
         self.output_mult = output_mult
 
-        n_blocks = 5 # number of blocks
+        self.n_blocks = n_blocks
         self.time_embedding_size = width - n_features
         
         self.time_embedding = ZeroToOneTimeEmbedding(self.time_embedding_size)
         blocks = []
-        for _ in range(n_blocks):
+        for _ in range(self.n_blocks):
             blocks.append(nn.Sequential(
                 nn.Linear(width, width, bias=False),
                 nn.SiLU(),
@@ -46,7 +46,7 @@ class FlowMLP(FlowModel):
         self.final = nn.Linear(width, n_features, bias=False)
         self.reset_parameters()
 
-    def reset_parameters(self, base_std=0.5) -> None:
+    def reset_parameters(self, base_std=0.02) -> None:
         # init all weights with fan_in / 1024 * base_std
         for n, p in self.named_parameters():
             skip_list = ["final"]

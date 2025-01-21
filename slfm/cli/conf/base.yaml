@@ -2,6 +2,7 @@ model:
   _target_ : slfm.model.FlowMLP
   n_features: 2
   width: 10
+  n_blocks: 5
   input_mult: 1
   output_mult: 1
   

@@ -22,9 +22,9 @@ The config file can be found at: `slfm/cli/conf/base.yaml`
 ### Train and evaluate 
 
 ```
-width=8
+width=512
 depth=5
-train_and_evaluate "model.time_embedding_size=${width}" "model.n_blocks=${depth}"
+train_and_evaluate  "++model.width=${width}" "++model.n_blocks=${depth}"
 ```
 
 ## Thanks
