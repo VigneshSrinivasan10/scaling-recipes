@@ -6,11 +6,6 @@ model:
   input_mult: 1
   output_mult: 1
   
-mup: 
-  switch: True
-  save_base_shapes: width_10.bsh
-  coord_check_filename: coord_check_mup_10.png
-
 trainer:
   max_epochs: 500
   log_interval: 10

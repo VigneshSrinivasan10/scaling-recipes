@@ -17,7 +17,6 @@ dependencies = [
     "hydra-core", 
     "torch", 
     "ipython",
-    "mup"
 ]
 
 [tool.setuptools]
