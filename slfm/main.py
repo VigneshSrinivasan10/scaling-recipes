@@ -6,6 +6,27 @@ from tqdm import tqdm
 
 from slfm.util import linear_decay_lr, warmup_cooldown_lr
 
+def compute_validation_loss(model, val_data, loss_fn):
+    model.eval()
+    val_loss = 0.0
+    with torch.no_grad():
+        for x_val, y_val in val_data:
+            val_loss += loss_fn(model, x_val, y_val).item()
+    # Compute validation accuracy
+    correct = 0
+    total = 0
+    val_loss = 0.0
+    for x_val, y_val in val_data:
+        outputs = model(x_val)
+        _, predicted = torch.max(outputs.data, 1)
+        total += y_val.size(0)
+        correct += (predicted == y_val).sum().item()
+        val_loss += torch.nn.functional.cross_entropy(outputs, y_val).item()
+    val_accuracy = 100 * correct / total
+    val_loss /= len(val_data)
+    model.train()
+    return val_loss, val_accuracy
+
 @hydra.main(
     version_base=None,
     config_name="base",
@@ -37,34 +58,40 @@ def train(cfg: DictConfig) -> None:
 
     dataset = hydra.utils.instantiate(cfg.data, size = cfg.data.size)            
     loss_fn = hydra.utils.instantiate(cfg.trainer.loss)
-    
+    train_data = dataset.create(type="train")
+    val_data = dataset.create(type="val")
+
     model.train()
     optimizer.zero_grad(set_to_none=True)
     for epoch in tqdm(range(cfg.trainer.max_epochs), desc="Training"):
-        model.zero_grad()
-        loss = loss_fn(model, dataset.create())
-        loss.backward()
+        
+        for it, (x, y) in enumerate(train_data):
+            model.zero_grad()
+            loss = loss_fn(model, x, y)
+            loss.backward()
 
-        grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.trainer.optimizer.gradient_clip)
+            grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.trainer.optimizer.gradient_clip)
 
-        lr = get_lr(epoch)
-        for param_group in optimizer.param_groups:
-            param_group["lr"] = lr
-        optimizer.step()
-                
-        if epoch % cfg.trainer.log_interval == 0:
-            print("Width: {} | Epoch: {} | LR: {} | Loss: {}".format(cfg.model.width, epoch, lr, loss.item()))
-            logger.log_train_loss(epoch, loss.item())
+            lr = get_lr(epoch)
+            for param_group in optimizer.param_groups:
+                param_group["lr"] = lr
+            optimizer.step()
+        
+        if epoch % cfg.logger.log_interval_epochs == 0:
+            logger.log_train_loss(epoch+1, loss.item())
+            # Compute validation accuracy
+            val_loss, val_accuracy = compute_validation_loss(model, val_data, loss_fn)
+            
+            print(f"Validation: Width: {cfg.model.width} | Epoch: {epoch} | Loss: {val_loss} | Accuracy: {val_accuracy}")
+            logger.log_val_loss(epoch+1, val_loss, val_accuracy)
+            
+        # Switch back to training mode
         if math.isnan(loss.item()):
             break   
     
     # Save the model and optimizer state
     logger.save_model(model, optimizer)
-       
-    if not math.isnan(loss):        
-        print(cfg.model.width, 2**cfg.trainer.optimizer.lr, loss.item())
-        logger.save_visuals(model, dataset.create())
-
+    print(cfg.model.width, 2**cfg.trainer.optimizer.lr, loss.item())
     # Free up memory after each iteration
     del model  # Delete the model
     torch.cuda.empty_cache()  # Free up GPU memory
@@ -85,16 +112,14 @@ def evaluate(cfg: DictConfig) -> torch.Tensor:
     model = logger.load_model(model)
     model.eval()
 
-    data = dataset.create()
+    test_data = dataset.create(type="test")
 
-    # Evaluate the model on the dataset
-    loss = loss_fn(model, data)
-    logger.log_eval_loss(0, loss)
+    # Evaluate the model on the test dataset
+    loss, accuracy = compute_validation_loss(model, test_data, loss_fn)
+    print(f"Test: Width: {cfg.model.width} | Loss: {loss} | Accuracy: {accuracy}")
+    logger.log_val_loss("Test", loss, accuracy)
 
-    # Save the visualizations
-    logger.save_visuals(model, data)
-
-    return loss
+    return loss, accuracy
 
 @hydra.main(
     version_base=None,

@@ -4,7 +4,8 @@ from datetime import datetime
 import torch
 
 class Logger:
-    def __init__(self, log_dir='logs', loss_dir="loss", ckpt_dir="ckpt", visuals_dir="visuals"):
+    def __init__(self, log_interval_epochs: int = 1, log_dir='logs', loss_dir="loss", ckpt_dir="ckpt", visuals_dir="visuals"):
+        self.log_interval_epochs = log_interval_epochs
         self.log_dir = log_dir #os.path.join(log_dir, f'{datetime.now().strftime("%Y%m%d_%H%M%S")}')
         os.makedirs(self.log_dir, exist_ok=True)
 
@@ -17,23 +18,20 @@ class Logger:
         os.makedirs(self.visuals_dir, exist_ok=True)
         
         self.train_loss_file = os.path.join(self.loss_dir, "train_loss.log")
-        self.eval_loss_file = os.path.join(self.loss_dir, "eval_loss.log")
+        self.val_loss_file = os.path.join(self.loss_dir, "val_loss.log")
         self.ckpt_path = os.path.join(self.ckpt_dir, "model.pth")
 
         self.flow_animation_file =  os.path.join(self.visuals_dir, "flow_animation.mp4")
         self.data_comparison_file = os.path.join(self.visuals_dir, "data_comparison.png")
 
 
-    def log_train_loss(self, iter, loss):
+    def log_train_loss(self, epoch, loss):
         with open(self.train_loss_file, 'a') as file:
-            file.write(f"Iter: {iter}, Loss: {loss}\n")
-        print(f"Iter: {iter}, Loss: {loss}")
+            file.write(f"Epoch: {epoch}, Loss: {loss}\n")
 
-    def log_eval_loss(self, iter, loss):
-        with open(self.eval_loss_file, 'a') as file:
-            file.write(f"Iter: {iter}, Loss: {loss}\n")
-        print(f"Iter: {iter}, Loss: {loss}")
-
+    def log_val_loss(self, epoch, loss, accuracy):
+        with open(self.val_loss_file, 'a') as file:
+            file.write(f"Epoch: {epoch}, Loss: {loss}, Accuracy: {accuracy}\n")
 
     def save_model(self, model, optimizer):
         # Save the model and optimizer state

@@ -1,31 +1,30 @@
 model:
-  _target_ : slfm.model.FlowMLP
-  n_features: 2
-  width: 10
+  _target_ : slfm.model.MLP
+  n_classes: 10
+  width: 32
   n_blocks: 5
   input_mult: 1
   output_mult: 1
   
 trainer:
-  max_epochs: 500
-  log_interval: 10
+  max_epochs: 25
   loss: 
-    _target_: slfm.loss.ConditionalFlowMatchingLoss 
+    _target_: slfm.loss.ClassificationLoss
   optimizer:
     _target_: torch.optim.AdamW # mup.MuAdam
-    lr: 0.1           # Learning rate
+    lr: 0.001           # Learning rate
     weight_decay: 0.001  # Weight decay (L2 regularization)
     lr_scheduler: linear_decay
     gradient_clip: 1.0
 
 data:
-  _target_: slfm.datasets.CustomDataset # slfm.datasets.DatasetCreator
-  size: 10000
+  _target_: slfm.datasets.MNISTDataset # slfm.datasets.DatasetCreator
+  size: 50000
+  batch_size: 100
 
 logger:
   _target_: slfm.logger.Logger
-  log_dir: logs/flow_mup_fc_w${model.width}_lr${trainer.optimizer.lr}
+  log_interval_epochs: 1
+  log_dir: logs/mnist/sp_${model.width}_lr${trainer.optimizer.lr}
   loss_dir: loss
-  ckpt_dir: ckpt 
-  visuals_dir: visuals
-  
+  ckpt_dir: ckpt  
