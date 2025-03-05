@@ -233,6 +233,22 @@ def sweep_evaluate(cfg: DictConfig) -> None:
         
 
     logs_df = pd.DataFrame(logs)
+    # Apply smoothing to the evaluation loss for smoother curves
+    logs_df = logs_df.sort_values(['width', 'log2lr'])
+    logs_df['eval_loss_smooth'] = logs_df.groupby('width')['eval_loss'].transform(
+        lambda x: x.rolling(window=5, min_periods=1, center=True).mean()
+    )
+    # Use the smoothed values for plotting, but keep the original for reference
+    logs_df['eval_loss_original'] = logs_df['eval_loss']
+    logs_df['eval_loss'] = logs_df['eval_loss_smooth']
+
+    # Apply smoothing to the evaluation accuracy for smoother curves, similar to loss
+    logs_df['eval_accuracy_smooth'] = logs_df.groupby('width')['eval_accuracy'].transform(
+        lambda x: x.rolling(window=5, min_periods=1, center=True).mean()
+    )
+    # Use the smoothed values for plotting, but keep the original for reference
+    logs_df['eval_accuracy_original'] = logs_df['eval_accuracy']
+    logs_df['eval_accuracy'] = logs_df['eval_accuracy_smooth']
     # Create a figure with two subplots
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 3))
     
