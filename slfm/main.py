@@ -191,13 +191,13 @@ def mup_coord_check(cfg: DictConfig) -> None:
     config_name="base",
     config_path="cli/conf",
 )
-def mup_train(cfg: DictConfig) -> None:
+def sweep_train(cfg: DictConfig) -> None:
     # Initialize variables from the config
     
     import numpy as np
-    for width in [10, 32, 64, 128, 256, 512][::-1]:
-        for log2lr in np.linspace(-8, -1, 10):
-            cfg.trainer.optimizer.lr = float(f"{2**log2lr:.3f}")
+    for width in cfg.sweep.widths: #, 64, 128, 256, 512]:
+        for log2lr in np.linspace(cfg.sweep.lr_range[0], cfg.sweep.lr_range[1], cfg.sweep.lr_intervals):
+            cfg.trainer.optimizer.lr = float(f"{2**log2lr:.5f}")
             cfg.model.width = int(width)
             train(cfg)
 
@@ -206,37 +206,101 @@ def mup_train(cfg: DictConfig) -> None:
     config_name="base",
     config_path="cli/conf",
 )
-def mup_evaluate(cfg: DictConfig) -> None:
-    # Initialize variables from the config
+def sweep_evaluate(cfg: DictConfig) -> None:
     
     import numpy as np
+    import pandas as pd 
+    import seaborn as sns  
+    import matplotlib.pyplot as plt
+    from matplotlib.colors import LogNorm
     logs = []
 
-    for width in [10, 32]: #, 64, 128, 256, 512]:
-        for log2lr in np.linspace(-6, -1, 10):
-            cfg.trainer.optimizer.lr = float(f"{2**log2lr:.3f}")
+    for width in cfg.sweep.widths: #, 64, 128, 256, 512]:
+        for log2lr in np.linspace(cfg.sweep.lr_range[0], cfg.sweep.lr_range[1], cfg.sweep.lr_intervals):
+            cfg.trainer.optimizer.lr = float(f"{2**log2lr:.5f}")
             cfg.model.width = int(width)
             print("Evaluating model width: {} and with lr: {}".format(width, cfg.trainer.optimizer.lr))
-            loss = evaluate(cfg)
+            loss, accuracy = evaluate(cfg)
 
             logs.append(dict(
                 epoch=0,
                 model_type='MLP',
-                log2lr=log2lr,
-                eval_loss=loss.item(),
+                log2lr=2**log2lr,
+                eval_loss=loss,
+                eval_accuracy=accuracy,
                 width=cfg.model.width,
             ))
         
-    import pandas as pd 
-    import seaborn as sns  
-    import matplotlib.pyplot as plt
 
     logs_df = pd.DataFrame(logs)
+    # Create a figure with two subplots
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 3))
+    
+    # Define a color palette - using a sequential color map for width progression
+    palette = sns.color_palette("viridis", n_colors=len(logs_df['width'].unique()))
+    
+    # First subplot for eval_loss
     sns.lineplot(x='log2lr', y='eval_loss', hue='width', data=logs_df[(logs_df['model_type']=='MLP')&
-                                                                   (logs_df['eval_loss']<5)&
-                                                                   (logs_df['epoch']==0)])
-    plt.savefig("u_mup_eval_loss.png")  # You can specify other formats such as 'pdf', 'svg', etc.
+                                                                   (logs_df['eval_loss']>0)&
+                                                                   (logs_df['epoch']==0)], 
+                palette=palette, ax=ax1)
+    # Set y-axis to log scale for the loss plot
+    ax1.set_yscale('log')
+    ax1.set_xscale('log')
+
+    ax1.set_title('Evaluation Loss')
+    ax1.set_xlabel('Learning Rate')
+    ax1.set_ylabel('Loss')
+    ax1.set_ylim(0, 2)
+    # Second subplot for eval_accuracy
+    sns.lineplot(x='log2lr', y='eval_accuracy', hue='width', data=logs_df[(logs_df['model_type']=='MLP')&
+                                                                   (logs_df['epoch']==0)], 
+                palette=palette, ax=ax2)
+    ax2.set_xscale('log')
+    ax2.set_title('Evaluation Accuracy')
+    ax2.set_xlabel('Learning Rate')
+    ax2.set_ylabel('Accuracy (%)')
+    ax2.set_ylim(80, 100)
+    
+    # Add legends with better formatting
+    #ax1.legend(title='Width', bbox_to_anchor=(1.05, 1), loc='upper left')
+    # Remove the default legend from the first subplot
+    ax1.get_legend().remove()
+    ax2.get_legend().remove()
+    
+    # Create a custom colorbar for width with log scale
+    # Only use powers of 2 for the colorbar
+    max_width = max(logs_df['width'])
+    # Define power-of-2 ticks
+    nice_widths = [2**i for i in range(0, max_width.bit_length())]  # Covers up to max_width
+    log_norm = LogNorm(vmin=min(nice_widths), vmax=max(nice_widths))
+
+    # Create figure and axes
+    sm = plt.cm.ScalarMappable(cmap="viridis", norm=log_norm)
+    sm.set_array([])
+
+    # Create colorbar
+    cbar = fig.colorbar(sm, ax=ax2, label='Width', orientation='vertical', pad=0.01)
+
+    # Set colorbar ticks and labels at powers of 2
+    cbar.set_ticks(nice_widths)
+    cbar.set_ticklabels([f"$2^{int(np.log2(tick))}$" for tick in nice_widths])
+
+    # Adjust layout and save the figure
+    plt.tight_layout()
+    plt.savefig(cfg.sweep.save_file, dpi=300)
 
     # Show the plot (optional)
     plt.show()
 
+@hydra.main(
+    version_base=None,
+    config_name="base",
+    config_path="cli/conf",
+)
+def sweep_train_and_evaluate(cfg: DictConfig) -> None:
+    sweep_train(cfg)
+    sweep_evaluate(cfg)
+
+if __name__ == "__main__":
+    sweep_train_and_evaluate()
