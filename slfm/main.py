@@ -219,7 +219,7 @@ def sweep_train(cfg: DictConfig) -> None:
     config_path="cli/conf",
 )
 def sweep_evaluate(cfg: DictConfig) -> None:
-    
+    import os
     import numpy as np
     import pandas as pd 
     import seaborn as sns  
@@ -316,6 +316,7 @@ def sweep_evaluate(cfg: DictConfig) -> None:
 
     # Adjust layout and save the figure
     plt.tight_layout()
+    os.makedirs(os.path.dirname(cfg.sweep.save_file), exist_ok=True)
     plt.savefig(cfg.sweep.save_file, dpi=300)
 
     # Show the plot (optional)

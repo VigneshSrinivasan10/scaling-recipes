@@ -35,4 +35,4 @@ sweep:
   n_blocks: [5, 10, 20]
   lr_range: [-10, -3]
   lr_intervals: 25
-  save_file: sweep_metrics_${model.parametrization}_${model.width}_lr${trainer.optimizer.lr}.png
+  save_file: sweep_plots/sweep_metrics_${model.parametrization}_${model.width}_lr${trainer.optimizer.lr}.png

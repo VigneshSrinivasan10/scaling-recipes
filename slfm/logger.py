@@ -21,10 +21,6 @@ class Logger:
         self.val_loss_file = os.path.join(self.loss_dir, "val_loss.log")
         self.ckpt_path = os.path.join(self.ckpt_dir, "model.pth")
 
-        self.flow_animation_file =  os.path.join(self.visuals_dir, "flow_animation.mp4")
-        self.data_comparison_file = os.path.join(self.visuals_dir, "data_comparison.png")
-
-
     def log_train_loss(self, epoch, loss):
         with open(self.train_loss_file, 'a') as file:
             file.write(f"Epoch: {epoch}, Loss: {loss}\n")
