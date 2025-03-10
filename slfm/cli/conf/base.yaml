@@ -5,7 +5,7 @@ model:
   n_blocks: 5
   input_mult: 1
   output_mult: 1
-  parametrization: mup
+  parametrization: sp
   
 trainer:
   max_epochs: 25
@@ -21,18 +21,18 @@ trainer:
 data:
   _target_: slfm.datasets.MNISTDataset # slfm.datasets.DatasetCreator
   size: 50000
-  batch_size: 100
+  batch_size: 10000
 
 logger:
   _target_: slfm.logger.Logger
   log_interval_epochs: 1
-  log_dir: logs/mnist/mup_${model.width}_lr${trainer.optimizer.lr}
+  log_dir: logs/mnist/${model.parametrization}_${model.width}_lr${trainer.optimizer.lr}
   loss_dir: loss
   ckpt_dir: ckpt  
 
 sweep:
-  widths: [8, 16, 32]
+  widths: [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
   n_blocks: [5, 10, 20]
-  lr_range: [-15, -3]
+  lr_range: [-10, -3]
   lr_intervals: 25
-  save_file: sweep_metrics.png
+  save_file: sweep_metrics_${model.parametrization}_${model.width}_lr${trainer.optimizer.lr}.png
