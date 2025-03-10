@@ -110,12 +110,13 @@ class FlowMLP(FlowModel):
 
 
 class MLP(FlowModel):
-    def __init__(self, n_classes=10, width=32, n_blocks=5, nonlin=F.relu, output_mult=1.0, input_mult=1.0):
+    def __init__(self, n_classes=10, width=32, n_blocks=5, nonlin=F.relu, output_mult=1.0, input_mult=1.0, parametrization="mup"):
         super().__init__()
 
         self.nonlin = nonlin
         self.input_mult = input_mult
         self.output_mult = output_mult
+        self.parametrization = parametrization
 
         self.n_blocks = n_blocks
         
@@ -133,9 +134,14 @@ class MLP(FlowModel):
                 ))
         self.blocks = nn.ModuleList(blocks)
         self.final = nn.Linear(width, n_classes, bias=False)
-        self.reset_parameters()
+        if self.parametrization == "mup":
+            self.reset_parameters_mup()
+        elif self.parametrization == "sp":
+            self.reset_parameters_sp()
+        else:
+            raise ValueError(f"Invalid parametrization: {self.parametrization}")
 
-    def reset_parameters(self, base_std=0.02) -> None:
+    def reset_parameters_mup(self, base_std=0.02) -> None:
         # init all weights with fan_in / 1024 * base_std
         for n, p in self.named_parameters():
             skip_list = ["final"]
@@ -143,6 +149,11 @@ class MLP(FlowModel):
                 fan_in = p.shape[1]
                 p.data.normal_(mean=0.0, std=base_std * (fan_in) ** -0.5)
         # init final layer with zeros
+        nn.init.zeros_(self.final.weight)
+
+    def reset_parameters_sp(self) -> None:
+        for n, p in self.named_parameters():
+            nn.init.xavier_normal_(p.data)
         nn.init.zeros_(self.final.weight)
 
     def forward(self, X):

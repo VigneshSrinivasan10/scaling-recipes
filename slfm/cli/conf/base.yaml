@@ -5,6 +5,7 @@ model:
   n_blocks: 5
   input_mult: 1
   output_mult: 1
+  parametrization: mup
   
 trainer:
   max_epochs: 25

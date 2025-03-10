@@ -37,13 +37,19 @@ def train(cfg: DictConfig) -> None:
     import math
     import gc
 
-    model = hydra.utils.instantiate(cfg.model, width=cfg.model.width)
+    model = hydra.utils.instantiate(cfg.model, width=cfg.model.width, parametrization=cfg.model.parametrization)
 
-    optimizer, optimizer_settings = model.configure_optimizers(
-        weight_decay=cfg.trainer.optimizer.weight_decay,
-        learning_rate=cfg.trainer.optimizer.lr,
-        betas=(1 - (cfg.data.size/5e5) * (1 - 0.9), 1 - (cfg.data.size/5e5) * (1 - 0.95)),
-    )
+    if cfg.model.parametrization == "mup":
+        optimizer, optimizer_settings = model.configure_optimizers(
+            weight_decay=cfg.trainer.optimizer.weight_decay,
+            learning_rate=cfg.trainer.optimizer.lr,
+            betas=(1 - (cfg.data.size/5e5) * (1 - 0.9), 1 - (cfg.data.size/5e5) * (1 - 0.95)),
+        )
+    elif cfg.model.parametrization == "sp":
+        optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.trainer.optimizer.lr, weight_decay=cfg.trainer.optimizer.weight_decay)
+        optimizer_settings = {}
+    else:
+        raise ValueError(f"Invalid parametrization: {cfg.model.parametrization}")
 
     # Learning rate scheduler
     if cfg.trainer.optimizer.lr_scheduler == "linear_decay":
