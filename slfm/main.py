@@ -144,58 +144,6 @@ def train_and_evaluate(cfg: DictConfig) -> None:
     train(cfg)
     evaluate(cfg)
 
-@hydra.main(
-    version_base=None,
-    config_name="base",
-    config_path="cli/conf",
-)
-def mup_coord_check(cfg: DictConfig) -> None:
-
-    print(OmegaConf.to_yaml(cfg))
-    import numpy as np
-    from mup import get_shapes, make_base_shapes, set_base_shapes
-    from slfm.coord_check import get_coord_data, plot_coord_data
-
-    ### This is for making the base shapes
-    model = hydra.utils.instantiate(cfg.model)
-    scaled_model = hydra.utils.instantiate(cfg.model, width=cfg.model.width*2)
-    
-    base_shapes = get_shapes(model)
-    delta_shapes = get_shapes(scaled_model)
-                    
-    make_base_shapes(base_shapes, delta_shapes, savefile=cfg.mup.save_base_shapes)
-
-    # Use the base shaped here
-    mup = cfg.mup.switch
-    def gen(w, standparam=False):
-        def f():
-            print("Creating model with width: ", w)
-            model = hydra.utils.instantiate(cfg.model, width=w)
-            if standparam:
-                set_base_shapes(model, None)
-            else:
-                assert cfg.mup.save_base_shapes, 'load_base_shapes needs to be nonempty'
-                set_base_shapes(model, cfg.mup.save_base_shapes)
-            return model
-        return f
-
-    widths = 2**np.arange(2, 5)
-    widths = np.array([10, 50, 100, 150, 200])
-    models = {w: gen(w, standparam=not mup) for w in widths}
-    loss_fn = hydra.utils.instantiate(cfg.trainer.loss)
-    
-    # make a dataloader with small batch size/seq len
-    dataset = hydra.utils.instantiate(cfg.data, size = cfg.data.size)    
-    dataloader = dataset.create()
-    # record data from the model activations over a few steps of training
-    # this returns a pandas dataframe
-    df = get_coord_data(loss_fn, models, dataloader, cuda=False, dict_in_out=True, nsteps=4)
-    
-    df.replace([np.inf, -np.inf], np.nan, inplace=True)
-    df.dropna(inplace=True)
-
-    # This saves the coord check plots to filename.
-    plot_coord_data(df, save_to=cfg.mup.coord_check_filename, legend=True)
 
 
 @hydra.main(
