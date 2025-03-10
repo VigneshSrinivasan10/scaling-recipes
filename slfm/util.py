@@ -4,6 +4,88 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from zuko.utils import odeint
 
+import os
+import seaborn as sns  
+from matplotlib.colors import LogNorm
+
+def sweep_plot(logs_df, cfg):
+    # Apply smoothing to the evaluation loss for smoother curves
+    logs_df = logs_df.sort_values(['width', 'log2lr'])
+    logs_df['eval_loss_smooth'] = logs_df.groupby('width')['eval_loss'].transform(
+        lambda x: x.rolling(window=5, min_periods=1, center=True).mean()
+    )
+    # Use the smoothed values for plotting, but keep the original for reference
+    logs_df['eval_loss_original'] = logs_df['eval_loss']
+    logs_df['eval_loss'] = logs_df['eval_loss_smooth']
+
+    # Apply smoothing to the evaluation accuracy for smoother curves, similar to loss
+    logs_df['eval_accuracy_smooth'] = logs_df.groupby('width')['eval_accuracy'].transform(
+        lambda x: x.rolling(window=5, min_periods=1, center=True).mean()
+    )
+    # Use the smoothed values for plotting, but keep the original for reference
+    logs_df['eval_accuracy_original'] = logs_df['eval_accuracy']
+    logs_df['eval_accuracy'] = logs_df['eval_accuracy_smooth']
+    # Create a figure with two subplots
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 3))
+    
+    # Define a color palette - using a sequential color map for width progression
+    palette = sns.color_palette("viridis", n_colors=len(logs_df['width'].unique()))
+    
+    # First subplot for eval_loss
+    sns.lineplot(x='log2lr', y='eval_loss', hue='width', data=logs_df[(logs_df['model_type']=='MLP')&
+                                                                   (logs_df['eval_loss']>0)&
+                                                                   (logs_df['epoch']==0)], 
+                palette=palette, ax=ax1)
+    # Set y-axis to log scale for the loss plot
+    ax1.set_yscale('log')
+    ax1.set_xscale('log')
+
+    ax1.set_title('Evaluation Loss')
+    ax1.set_xlabel('Learning Rate')
+    ax1.set_ylabel('Loss')
+    ax1.set_ylim(0, 2)
+    # Second subplot for eval_accuracy
+    sns.lineplot(x='log2lr', y='eval_accuracy', hue='width', data=logs_df[(logs_df['model_type']=='MLP')&
+                                                                   (logs_df['epoch']==0)], 
+                palette=palette, ax=ax2)
+    ax2.set_xscale('log')
+    ax2.set_title('Evaluation Accuracy')
+    ax2.set_xlabel('Learning Rate')
+    ax2.set_ylabel('Accuracy (%)')
+    ax2.set_ylim(80, 100)
+    
+    # Add legends with better formatting
+    #ax1.legend(title='Width', bbox_to_anchor=(1.05, 1), loc='upper left')
+    # Remove the default legend from the first subplot
+    ax1.get_legend().remove()
+    ax2.get_legend().remove()
+    
+    # Create a custom colorbar for width with log scale
+    # Only use powers of 2 for the colorbar
+    max_width = max(logs_df['width'])
+    # Define power-of-2 ticks
+    nice_widths = [2**i for i in range(0, max_width.bit_length())]  # Covers up to max_width
+    log_norm = LogNorm(vmin=min(nice_widths), vmax=max(nice_widths))
+
+    # Create figure and axes
+    sm = plt.cm.ScalarMappable(cmap="viridis", norm=log_norm)
+    sm.set_array([])
+
+    # Create colorbar
+    cbar = fig.colorbar(sm, ax=ax2, label='Width', orientation='vertical', pad=0.01)
+
+    # Set colorbar ticks and labels at powers of 2
+    cbar.set_ticks(nice_widths)
+    cbar.set_ticklabels([f"$2^{int(np.log2(tick))}$" for tick in nice_widths])
+
+    # Adjust layout and save the figure
+    plt.tight_layout()
+    os.makedirs(os.path.dirname(cfg.sweep.save_file), exist_ok=True)
+    plt.savefig(cfg.sweep.save_file, dpi=300)
+
+    # Show the plot (optional)
+    plt.show()
+
 def plot_dataset(X, bins, ax=None, **kwargs):
     if ax is None:
         ax = plt.gca()
