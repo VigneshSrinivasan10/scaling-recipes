@@ -8,15 +8,16 @@ from slfm.util import linear_decay_lr, warmup_cooldown_lr
 
 def compute_validation_loss(model, val_data, loss_fn):
     model.eval()
-    val_loss = 0.0
-    with torch.no_grad():
-        for x_val, y_val in val_data:
-            val_loss += loss_fn(model, x_val, y_val).item()
+    if torch.cuda.is_available():
+        model.cuda()
     # Compute validation accuracy
     correct = 0
     total = 0
     val_loss = 0.0
     for x_val, y_val in val_data:
+        if torch.cuda.is_available():
+            x_val = x_val.cuda()
+            y_val = y_val.cuda()
         outputs = model(x_val)
         _, predicted = torch.max(outputs.data, 1)
         total += y_val.size(0)
@@ -63,10 +64,15 @@ def train(cfg: DictConfig) -> None:
 
     model.train()
     optimizer.zero_grad(set_to_none=True)
+    if torch.cuda.is_available():
+        model.cuda()
     for epoch in tqdm(range(cfg.trainer.max_epochs), desc="Training"):
         
         for it, (x, y) in enumerate(train_data):
             model.zero_grad()
+            if torch.cuda.is_available():
+                x = x.cuda()
+                y = y.cuda()
             loss = loss_fn(model, x, y)
             loss.backward()
 
