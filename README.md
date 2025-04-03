@@ -1,12 +1,18 @@
-# Scaling Laws for Flow Matching
+# Scaling Recipes
 
-Scaling Laws for Flow Matching (SLFM) is a project for understanding scaling laws and how they affect flow matching models. 
+Scaling recipes is a project for understanding best practices for scaling neural networks for different tasks. 
 
 ### Scope
-- [x] Flow matching on a toy dataset. 
-- [x] Implement u-mup.  
-- [ ] Coordinate check for unit activations during training. 
-- [ ] Evaluate convergence by varying different aspects like lr, width, depth etc.  
+- Classification on MNIST. 
+    - [x] Implement Standard Parametrization (SP).  
+    - [x] Implement Maximal Update Parametrization (muP).  
+    - [x] Evaluate performance of different parametrizations by varying different aspects like lr, width etc. 
+
+- [ ] Flow matching on a toy dataset. 
+    - [ ] Implement Standard Parametrization (SP).  
+    - [ ] Implement Maximal Update Parametrization (muP).  
+    - [ ] Evaluate performance of different parametrizations by varying different aspects like lr, width etc. 
+
 
 ## Installation
 
