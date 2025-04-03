@@ -33,14 +33,24 @@ The config file can be found at: `slfm/cli/conf/base.yaml`
 
 ### Train and evaluate 
 
+- Sample command to train and evaluate the model:
 ```
 width=512
 depth=5
 train_and_evaluate  "++model.width=${width}" "++model.n_blocks=${depth}"
 ```
+- Sample command to run a sweep:
+```
+sweep 
+```
 
 ### Expected outcome 
-![alt text](images/image.png)
+TBD.
+
+## Flow matching 
+TBD.
+
+
 ## Thanks
 
 The project starts from a very cool [notebook](https://bm371613.github.io/conditional-flow-matching/) on flow matching. A lot of the code for scaling is borrowed from this [guide](https://github.com/cloneofsimo/scaling-guide/).
