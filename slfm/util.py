@@ -8,7 +8,7 @@ import os
 import seaborn as sns  
 from matplotlib.colors import LogNorm
 
-def sweep_plot(logs_df, cfg):
+def sweep_plot(logs_df, cfg, show=False):
     # Apply smoothing to the evaluation loss for smoother curves
     logs_df = logs_df.sort_values(['width', 'log2lr'])
     logs_df['eval_loss_smooth'] = logs_df.groupby('width')['eval_loss'].transform(
@@ -82,9 +82,8 @@ def sweep_plot(logs_df, cfg):
     plt.tight_layout()
     os.makedirs(os.path.dirname(cfg.sweep.save_file), exist_ok=True)
     plt.savefig(cfg.sweep.save_file, dpi=300)
-
-    # Show the plot (optional)
-    plt.show()
+    if show:
+        plt.show()
 
 def plot_dataset(X, bins, ax=None, **kwargs):
     if ax is None:

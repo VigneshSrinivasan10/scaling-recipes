@@ -145,7 +145,6 @@ def train_and_evaluate(cfg: DictConfig) -> None:
     evaluate(cfg)
 
 
-
 @hydra.main(
     version_base=None,
     config_name="base",
@@ -192,6 +191,38 @@ def sweep_evaluate(cfg: DictConfig) -> None:
     logs_df = pd.DataFrame(logs)
     sweep_plot(logs_df, cfg)
 
+def sweep_across_parametrizations(cfg: DictConfig) -> None:
+
+    import numpy as np
+    import pandas as pd 
+    from slfm.util import sweep_plot
+    logs = []
+
+    parametrizations = ['mup', 'sp']    
+    for parametrization in parametrizations:
+        cfg.model.parametrization = parametrization
+        for width in cfg.sweep.widths:     
+            for log2lr in np.linspace(cfg.sweep.lr_range[0], cfg.sweep.lr_range[1], cfg.sweep.lr_intervals):
+                cfg.trainer.optimizer.lr = float(f"{2**log2lr:.5f}")
+                cfg.model.width = int(width)
+                print("Evaluating model width: {} and with lr: {}".format(width, cfg.trainer.optimizer.lr))
+                loss, accuracy = evaluate(cfg)
+
+                logs.append(dict(
+                    parametrization=parametrization,
+                    epoch=0,
+                    model_type='MLP',
+                    log2lr=2**log2lr,
+                    eval_loss=loss,
+                    eval_accuracy=accuracy,
+                    width=cfg.model.width,
+                ))
+            
+
+    logs_df = pd.DataFrame(logs)
+    sweep_plot(logs_df, cfg)
+
+
 @hydra.main(
     version_base=None,
     config_name="base",
@@ -200,6 +231,7 @@ def sweep_evaluate(cfg: DictConfig) -> None:
 def sweep_train_and_evaluate(cfg: DictConfig) -> None:
     sweep_train(cfg)
     sweep_evaluate(cfg)
+
 
 if __name__ == "__main__":
     sweep_train_and_evaluate()
