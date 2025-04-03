@@ -4,7 +4,7 @@ from omegaconf import DictConfig, OmegaConf
 import torch 
 from tqdm import tqdm
 
-from slfm.util import linear_decay_lr, warmup_cooldown_lr
+from scaling_recipes.util import linear_decay_lr, warmup_cooldown_lr
 
 def compute_validation_loss(model, val_data, loss_fn):
     model.eval()
@@ -154,11 +154,14 @@ def sweep_train(cfg: DictConfig) -> None:
     # Initialize variables from the config
     
     import numpy as np
-    for width in cfg.sweep.widths: #, 64, 128, 256, 512]:
-        for log2lr in np.linspace(cfg.sweep.lr_range[0], cfg.sweep.lr_range[1], cfg.sweep.lr_intervals):
-            cfg.trainer.optimizer.lr = float(f"{2**log2lr:.5f}")
-            cfg.model.width = int(width)
-            train(cfg)
+    parametrizations = ['mup', 'sp']  
+    for parametrization in parametrizations:
+        cfg.model.parametrization = parametrization
+        for width in cfg.sweep.widths: #, 64, 128, 256, 512]:
+            for log2lr in np.linspace(cfg.sweep.lr_range[0], cfg.sweep.lr_range[1], cfg.sweep.lr_intervals):
+                cfg.trainer.optimizer.lr = float(f"{2**log2lr:.5f}")
+                cfg.model.width = int(width)
+                train(cfg)
 
 @hydra.main(
     version_base=None,
@@ -168,7 +171,7 @@ def sweep_train(cfg: DictConfig) -> None:
 def sweep_evaluate(cfg: DictConfig) -> None:
     import numpy as np
     import pandas as pd 
-    from slfm.util import sweep_plot
+    from scaling_recipes.util import sweep_plot
     logs = []
 
     for width in cfg.sweep.widths: #, 64, 128, 256, 512]:
@@ -195,9 +198,10 @@ def sweep_across_parametrizations(cfg: DictConfig) -> None:
 
     import numpy as np
     import pandas as pd 
-    from slfm.util import sweep_plot
+    from scaling_recipes.util import sweep_plot
     logs = []
 
+    import pdb; pdb.set_trace()
     parametrizations = ['mup', 'sp']    
     for parametrization in parametrizations:
         cfg.model.parametrization = parametrization

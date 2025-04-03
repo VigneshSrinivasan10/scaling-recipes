@@ -8,7 +8,7 @@ Scaling recipes is a project for understanding best practices for scaling neural
     - [x] Implement Maximal Update Parametrization (muP).  
     - [x] Evaluate performance of different parametrizations by varying different aspects like lr, width etc. 
 
-- [ ] Flow matching on a toy dataset. 
+- Flow matching on a toy dataset. 
     - [ ] Implement Standard Parametrization (SP).  
     - [ ] Implement Maximal Update Parametrization (muP).  
     - [ ] Evaluate performance of different parametrizations by varying different aspects like lr, width etc. 
@@ -39,9 +39,9 @@ width=512
 depth=5
 train_and_evaluate  "++model.width=${width}" "++model.n_blocks=${depth}"
 ```
-- Sample command to run a sweep:
+- Sample command to run a sweep through different lr and widths with different parametrizations:
 ```
-sweep 
+sweep
 ```
 
 ### Expected outcome 
