@@ -163,6 +163,12 @@ def sweep_train(cfg: DictConfig) -> None:
                 cfg.model.width = int(width)
                 train(cfg)
 
+
+@hydra.main(
+    version_base=None,
+    config_name="base",
+    config_path="cli/conf",
+)
 def sweep_evaluate(cfg: DictConfig) -> None:
 
     import numpy as np

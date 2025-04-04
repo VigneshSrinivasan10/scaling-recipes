@@ -9,39 +9,43 @@ import seaborn as sns
 from matplotlib.colors import LogNorm
 
 def sweep_plot(logs_df, cfg, show=False):
-    # Apply smoothing to the evaluation loss for smoother curves
     logs_df = logs_df.sort_values(['width', 'log2lr'])
-    logs_df['eval_loss_smooth'] = logs_df.groupby('width')['eval_loss'].transform(
-        lambda x: x.rolling(window=5, min_periods=1, center=True).mean()
-    )
-    # Use the smoothed values for plotting, but keep the original for reference
-    logs_df['eval_loss_original'] = logs_df['eval_loss']
-    logs_df['eval_loss'] = logs_df['eval_loss_smooth']
 
-    # Apply smoothing to the evaluation accuracy for smoother curves, similar to loss
-    logs_df['eval_accuracy_smooth'] = logs_df.groupby('width')['eval_accuracy'].transform(
-        lambda x: x.rolling(window=5, min_periods=1, center=True).mean()
-    )
-    # Use the smoothed values for plotting, but keep the original for reference
-    logs_df['eval_accuracy_original'] = logs_df['eval_accuracy']
-    logs_df['eval_accuracy'] = logs_df['eval_accuracy_smooth']
+    # Apply smoothing if specified
+    if cfg.sweep.smoothing:
+        # Apply smoothing to the evaluation loss for smoother curves
+        logs_df['eval_loss_smooth'] = logs_df.groupby('width')['eval_loss'].transform(
+            lambda x: x.rolling(window=5, min_periods=1, center=True).mean()
+        )
+        # Use the smoothed values for plotting, but keep the original for reference
+        logs_df['eval_loss_original'] = logs_df['eval_loss']
+        logs_df['eval_loss'] = logs_df['eval_loss_smooth']
+
+        # Apply smoothing to the evaluation accuracy for smoother curves
+        logs_df['eval_accuracy_smooth'] = logs_df.groupby('width')['eval_accuracy'].transform(
+            lambda x: x.rolling(window=5, min_periods=1, center=True).mean()
+        )
+        # Use the smoothed values for plotting, but keep the original for reference
+        logs_df['eval_accuracy_original'] = logs_df['eval_accuracy']
+        logs_df['eval_accuracy'] = logs_df['eval_accuracy_smooth']
+
+
     # Create a figure with two subplots
     fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(8, 6))
     
     # Define a color palette - using a sequential color map for width progression
     palette = sns.color_palette("viridis", n_colors=len(logs_df['width'].unique()))
-    
-    # First row - MUP parametrization
+    # First column - SP parametrization
     # Loss plot
-    sns.lineplot(x='log2lr', y='eval_loss', hue='width', 
+    sns.lineplot(x='log2lr', y='eval_loss', hue='width',
                 data=logs_df[(logs_df['model_type']=='MLP')&
                             (logs_df['eval_loss']>0)&
                             (logs_df['epoch']==0)&
-                            (logs_df['parametrization']=='mup')],
+                            (logs_df['parametrization']=='sp')],
                 palette=palette, ax=ax1)
     ax1.set_yscale('log')
     ax1.set_xscale('log')
-    ax1.set_title('muP - Evaluation Loss')
+    ax1.set_title('SP - Evaluation Loss')
     ax1.set_xlabel('Learning Rate')
     ax1.set_ylabel('Loss')
     ax1.set_ylim(0, 2)
@@ -50,37 +54,37 @@ def sweep_plot(logs_df, cfg, show=False):
     sns.lineplot(x='log2lr', y='eval_accuracy', hue='width',
                 data=logs_df[(logs_df['model_type']=='MLP')&
                             (logs_df['epoch']==0)&
-                            (logs_df['parametrization']=='mup')],
-                palette=palette, ax=ax2)
-    ax2.set_xscale('log')
-    ax2.set_title('muP - Test Accuracy')
-    ax2.set_xlabel('Learning Rate')
-    ax2.set_ylabel('Accuracy (%)')
-    ax2.set_ylim(80, 100)
+                            (logs_df['parametrization']=='sp')],
+                palette=palette, ax=ax3)
+    ax3.set_xscale('log')
+    ax3.set_title('SP - Test Accuracy')
+    ax3.set_xlabel('Learning Rate')
+    ax3.set_ylabel('Accuracy (%)')
+    ax3.set_ylim(80, 100)
 
-    # Second row - SP parametrization 
+    # Second column - MUP parametrization
     # Loss plot
-    sns.lineplot(x='log2lr', y='eval_loss', hue='width',
+    sns.lineplot(x='log2lr', y='eval_loss', hue='width', 
                 data=logs_df[(logs_df['model_type']=='MLP')&
                             (logs_df['eval_loss']>0)&
                             (logs_df['epoch']==0)&
-                            (logs_df['parametrization']=='sp')],
-                palette=palette, ax=ax3)
-    ax3.set_yscale('log')
-    ax3.set_xscale('log')
-    ax3.set_title('SP - Evaluation Loss')
-    ax3.set_xlabel('Learning Rate')
-    ax3.set_ylabel('Loss')
-    ax3.set_ylim(0, 2)
+                            (logs_df['parametrization']=='mup')],
+                palette=palette, ax=ax2)
+    ax2.set_yscale('log')
+    ax2.set_xscale('log')
+    ax2.set_title('muP - Evaluation Loss')
+    ax2.set_xlabel('Learning Rate')
+    ax2.set_ylabel('Loss')
+    ax2.set_ylim(0, 2)
 
     # Accuracy plot
     sns.lineplot(x='log2lr', y='eval_accuracy', hue='width',
                 data=logs_df[(logs_df['model_type']=='MLP')&
                             (logs_df['epoch']==0)&
-                            (logs_df['parametrization']=='sp')],
+                            (logs_df['parametrization']=='mup')],
                 palette=palette, ax=ax4)
     ax4.set_xscale('log')
-    ax4.set_title('SP - Test Accuracy')
+    ax4.set_title('muP - Test Accuracy')
     ax4.set_xlabel('Learning Rate')
     ax4.set_ylabel('Accuracy (%)')
     ax4.set_ylim(80, 100)

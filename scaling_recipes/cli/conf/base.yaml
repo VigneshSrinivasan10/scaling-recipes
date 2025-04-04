@@ -21,7 +21,7 @@ trainer:
 data:
   _target_: scaling_recipes.datasets.MNISTDataset 
   size: 50000
-  batch_size: 10000
+  batch_size: 1000
 
 logger:
   _target_: scaling_recipes.logger.Logger
@@ -31,8 +31,9 @@ logger:
   ckpt_dir: ckpt  
 
 sweep:
-  widths: [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
+  widths: [8, 16, 32]#, 64, 128, 256, 512, 1024, 2048, 4096]
   n_blocks: [5, 10, 20]
   lr_range: [-10, -3]
-  lr_intervals: 25
-  save_file: sweep_plots/sweep_metrics_${model.parametrization}_${model.width}_lr${trainer.optimizer.lr}.png
+  lr_intervals: 10
+  smoothing: false
+  save_file: sweep_plots/sweep_metrics.png
