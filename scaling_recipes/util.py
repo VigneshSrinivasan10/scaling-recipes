@@ -26,40 +26,71 @@ def sweep_plot(logs_df, cfg, show=False):
     logs_df['eval_accuracy_original'] = logs_df['eval_accuracy']
     logs_df['eval_accuracy'] = logs_df['eval_accuracy_smooth']
     # Create a figure with two subplots
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 3))
+    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(8, 6))
     
     # Define a color palette - using a sequential color map for width progression
     palette = sns.color_palette("viridis", n_colors=len(logs_df['width'].unique()))
     
-    # First subplot for eval_loss
-    sns.lineplot(x='log2lr', y='eval_loss', hue='width', data=logs_df[(logs_df['model_type']=='MLP')&
-                                                                   (logs_df['eval_loss']>0)&
-                                                                   (logs_df['epoch']==0)], 
+    # First row - MUP parametrization
+    # Loss plot
+    sns.lineplot(x='log2lr', y='eval_loss', hue='width', 
+                data=logs_df[(logs_df['model_type']=='MLP')&
+                            (logs_df['eval_loss']>0)&
+                            (logs_df['epoch']==0)&
+                            (logs_df['parametrization']=='mup')],
                 palette=palette, ax=ax1)
-    # Set y-axis to log scale for the loss plot
     ax1.set_yscale('log')
     ax1.set_xscale('log')
-
-    ax1.set_title('Evaluation Loss')
+    ax1.set_title('muP - Evaluation Loss')
     ax1.set_xlabel('Learning Rate')
     ax1.set_ylabel('Loss')
     ax1.set_ylim(0, 2)
-    # Second subplot for eval_accuracy
-    sns.lineplot(x='log2lr', y='eval_accuracy', hue='width', data=logs_df[(logs_df['model_type']=='MLP')&
-                                                                   (logs_df['epoch']==0)], 
+
+    # Accuracy plot
+    sns.lineplot(x='log2lr', y='eval_accuracy', hue='width',
+                data=logs_df[(logs_df['model_type']=='MLP')&
+                            (logs_df['epoch']==0)&
+                            (logs_df['parametrization']=='mup')],
                 palette=palette, ax=ax2)
     ax2.set_xscale('log')
-    ax2.set_title('Evaluation Accuracy')
+    ax2.set_title('muP - Test Accuracy')
     ax2.set_xlabel('Learning Rate')
     ax2.set_ylabel('Accuracy (%)')
     ax2.set_ylim(80, 100)
-    
+
+    # Second row - SP parametrization 
+    # Loss plot
+    sns.lineplot(x='log2lr', y='eval_loss', hue='width',
+                data=logs_df[(logs_df['model_type']=='MLP')&
+                            (logs_df['eval_loss']>0)&
+                            (logs_df['epoch']==0)&
+                            (logs_df['parametrization']=='sp')],
+                palette=palette, ax=ax3)
+    ax3.set_yscale('log')
+    ax3.set_xscale('log')
+    ax3.set_title('SP - Evaluation Loss')
+    ax3.set_xlabel('Learning Rate')
+    ax3.set_ylabel('Loss')
+    ax3.set_ylim(0, 2)
+
+    # Accuracy plot
+    sns.lineplot(x='log2lr', y='eval_accuracy', hue='width',
+                data=logs_df[(logs_df['model_type']=='MLP')&
+                            (logs_df['epoch']==0)&
+                            (logs_df['parametrization']=='sp')],
+                palette=palette, ax=ax4)
+    ax4.set_xscale('log')
+    ax4.set_title('SP - Test Accuracy')
+    ax4.set_xlabel('Learning Rate')
+    ax4.set_ylabel('Accuracy (%)')
+    ax4.set_ylim(80, 100)
     # Add legends with better formatting
     #ax1.legend(title='Width', bbox_to_anchor=(1.05, 1), loc='upper left')
     # Remove the default legend from the first subplot
     ax1.get_legend().remove()
     ax2.get_legend().remove()
-    
+    ax3.get_legend().remove()
+    ax4.get_legend().remove()
     # Create a custom colorbar for width with log scale
     # Only use powers of 2 for the colorbar
     max_width = max(logs_df['width'])
