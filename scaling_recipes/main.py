@@ -163,45 +163,13 @@ def sweep_train(cfg: DictConfig) -> None:
                 cfg.model.width = int(width)
                 train(cfg)
 
-@hydra.main(
-    version_base=None,
-    config_name="base",
-    config_path="cli/conf",
-)
 def sweep_evaluate(cfg: DictConfig) -> None:
-    import numpy as np
-    import pandas as pd 
-    from scaling_recipes.util import sweep_plot
-    logs = []
-
-    for width in cfg.sweep.widths: #, 64, 128, 256, 512]:
-        for log2lr in np.linspace(cfg.sweep.lr_range[0], cfg.sweep.lr_range[1], cfg.sweep.lr_intervals):
-            cfg.trainer.optimizer.lr = float(f"{2**log2lr:.5f}")
-            cfg.model.width = int(width)
-            print("Evaluating model width: {} and with lr: {}".format(width, cfg.trainer.optimizer.lr))
-            loss, accuracy = evaluate(cfg)
-
-            logs.append(dict(
-                epoch=0,
-                model_type='MLP',
-                log2lr=2**log2lr,
-                eval_loss=loss,
-                eval_accuracy=accuracy,
-                width=cfg.model.width,
-            ))
-        
-
-    logs_df = pd.DataFrame(logs)
-    sweep_plot(logs_df, cfg)
-
-def sweep_across_parametrizations(cfg: DictConfig) -> None:
 
     import numpy as np
     import pandas as pd 
     from scaling_recipes.util import sweep_plot
     logs = []
 
-    import pdb; pdb.set_trace()
     parametrizations = ['mup', 'sp']    
     for parametrization in parametrizations:
         cfg.model.parametrization = parametrization

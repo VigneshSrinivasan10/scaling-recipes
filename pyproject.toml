@@ -16,6 +16,7 @@ dependencies = [
     "pandas",
     "hydra-core", 
     "torch", 
+    "torchvision",
     "ipython",
 ]
 
