@@ -35,9 +35,9 @@ The config file can be found at: `slfm/cli/conf/base.yaml`
 
 - Sample command to train and evaluate the model:
 ```
-width=512
-depth=5
-train_and_evaluate  "++model.width=${width}" "++model.n_blocks=${depth}"
+width=120
+lr=0.01
+train_and_evaluate  "++model.width=${width}" "++trainer.optimizer.lr=${lr}"
 ```
 - Sample command to run a sweep through different lr and widths with different parametrizations:
 ```

@@ -113,8 +113,12 @@ class LeNet(FlowModel):
         super().__init__()
         
         self.nonlin = nonlin
+
+        # Not used for anything
+        self.n_blocks = n_blocks
         self.input_mult = input_mult 
         self.output_mult = output_mult
+
         self.parametrization = parametrization
 
         self.conv1 = nn.Conv2d(1, 6, kernel_size=5)
