@@ -2,10 +2,10 @@ model:
   _target_ : slfm.model.MLP
   n_classes: 10
   width: 32
-  n_blocks: 5
+  n_blocks: 1
   input_mult: 1
   output_mult: 1
-  parametrization: sp
+  parametrization: mup
   
 trainer:
   max_epochs: 25
@@ -31,8 +31,8 @@ logger:
   ckpt_dir: ckpt  
 
 sweep:
-  widths: [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
+  widths: [8, 16, 32] #, 64, 128, 256, 512, 1024, 2048, 4096]
   n_blocks: [5, 10, 20]
-  lr_range: [-10, -3]
-  lr_intervals: 25
-  save_file: sweep_plots/sweep_metrics_${model.parametrization}_${model.width}_lr${trainer.optimizer.lr}.png
+  lr_range: [-10, -1]
+  lr_intervals: 10
+  save_file: sweep_plots/${model.parametrization}_${model.width}_lr${trainer.optimizer.lr}.png
