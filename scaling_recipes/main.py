@@ -4,7 +4,7 @@ from omegaconf import DictConfig, OmegaConf
 import torch 
 from tqdm import tqdm
 
-from slfm.util import linear_decay_lr, warmup_cooldown_lr
+from scaling_recipes.util import linear_decay_lr, warmup_cooldown_lr
 
 def compute_validation_loss(model, val_data, loss_fn):
     model.eval()
@@ -169,7 +169,7 @@ def sweep_train(cfg: DictConfig) -> None:
 def sweep_evaluate(cfg: DictConfig) -> None:
     import numpy as np
     import pandas as pd 
-    from slfm.util import sweep_plot
+    from scaling_recipes.util import sweep_plot
     logs = []
 
     for width in cfg.sweep.widths: #, 64, 128, 256, 512]:
