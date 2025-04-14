@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets, transforms
+
 class DatasetCreator:
     def __init__(self, size: int):
         self.size = size

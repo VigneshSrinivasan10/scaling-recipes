@@ -44,7 +44,7 @@ class Logger:
         return model
                                              
     def save_visuals(self, model, dataset):
-        from slfm.util import animate_flow, plot_data
+        from scaling_recipes.util import animate_flow, plot_data
         #animate_flow(model, target_file=self.flow_animation_file)
         plot_data(model, dataset, target_file=self.data_comparison_file)
     
