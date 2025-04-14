@@ -45,7 +45,13 @@ sweep
 ```
 
 ### Expected outcome 
-TBD.
+Key observation:
+- muP shows more consistent convergence behavior allowing better HP transfer capabilities. 
+
+![muP](images/sweep_metrics_mup.png)
+![SP](images/sweep_metrics_sp.png)
+
+
 
 ## Flow matching 
 TBD.
