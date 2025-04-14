@@ -1,5 +1,5 @@
 model:
-  _target_ : slfm.model.MLP
+  _target_ : scaling_recipes.model.MLP
   n_classes: 10
   width: 32
   n_blocks: 1
@@ -10,21 +10,21 @@ model:
 trainer:
   max_epochs: 25
   loss: 
-    _target_: slfm.loss.ClassificationLoss
+    _target_: scaling_recipes.loss.ClassificationLoss
   optimizer:
-    _target_: torch.optim.AdamW # mup.MuAdam
+    _target_: torch.optim.AdamW 
     lr: 0.001           # Learning rate
     weight_decay: 0.001  # Weight decay (L2 regularization)
     lr_scheduler: linear_decay
     gradient_clip: 1.0
 
 data:
-  _target_: slfm.datasets.MNISTDataset # slfm.datasets.DatasetCreator
+  _target_: scaling_recipes.datasets.MNISTDataset 
   size: 50000
   batch_size: 10000
 
 logger:
-  _target_: slfm.logger.Logger
+  _target_: scaling_recipes.logger.Logger
   log_interval_epochs: 1
   log_dir: logs/mnist/${model.parametrization}_${model.width}_lr${trainer.optimizer.lr}
   loss_dir: loss

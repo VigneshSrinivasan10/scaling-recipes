@@ -2,8 +2,8 @@
 
 # Project information
 [project]
-name = "slfm"
-description = "Scaling laws for flow matching."
+name = "scaling_recipes"
+description = "Scaling recipes for DNNs."
 dynamic = ["version"]
 
 authors = [{ name = "Vignesh Srinivasan", email = "vignesh.mssrinivasan@gmail.com" },]
@@ -16,15 +16,16 @@ dependencies = [
     "pandas",
     "hydra-core", 
     "torch", 
+    "torchvision",
     "ipython",
 ]
 
 [tool.setuptools]
-packages = ["slfm"]  # Specify only the package(s) you want
+packages = ["scaling_recipes"]  # Specify only the package(s) you want
 
 [project.scripts]
-train-flow-matching = "slfm.main:train"
-evaluate = "slfm.main:evaluate" 
-train_and_evaluate = "slfm.main:train_and_evaluate"
-sweep = "slfm.main:sweep_train_and_evaluate"
-sweep_evaluate = "slfm:main.sweep_evaluate"
+train-flow-matching = "scaling_recipes.main:train"
+evaluate = "scaling_recipes.main:evaluate" 
+train_and_evaluate = "scaling_recipes.main:train_and_evaluate"
+sweep = "scaling_recipes.main:sweep_train_and_evaluate"
+sweep_evaluate = "scaling_recipes:main.sweep_evaluate"
