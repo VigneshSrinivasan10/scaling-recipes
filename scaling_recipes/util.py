@@ -143,6 +143,66 @@ def plot_data(model, dataset, target_file: str = 'generated_vs_target.png') -> N
     plt.close()
 
 
+def flow_sweep_plot(logs_df, cfg):
+    """Plot flow matching sweep results: test loss vs learning rate, colored by width."""
+    # Apply smoothing to the evaluation loss for smoother curves
+    logs_df = logs_df.sort_values(['width', 'log2lr'])
+    logs_df['eval_loss_smooth'] = logs_df.groupby('width')['eval_loss'].transform(
+        lambda x: x.rolling(window=5, min_periods=1, center=True).mean()
+    )
+    # Use the smoothed values for plotting, but keep the original for reference
+    logs_df['eval_loss_original'] = logs_df['eval_loss']
+    logs_df['eval_loss'] = logs_df['eval_loss_smooth']
+
+    # Create a figure with one subplot
+    fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+
+    # Define a color palette - using a sequential color map for width progression
+    palette = sns.color_palette("viridis", n_colors=len(logs_df['width'].unique()))
+
+    # Plot eval_loss vs learning rate
+    sns.lineplot(x='log2lr', y='eval_loss', hue='width', data=logs_df[(logs_df['model_type']=='FlowMLP')&
+                                                                   (logs_df['eval_loss']>0)&
+                                                                   (logs_df['epoch']==0)],
+                palette=palette, ax=ax)
+    # Set y-axis to log scale for the loss plot
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+
+    ax.set_title('Flow Matching: Test Loss vs Learning Rate')
+    ax.set_xlabel('Learning Rate')
+    ax.set_ylabel('Test Loss')
+
+    # Remove the default legend
+    ax.get_legend().remove()
+
+    # Create a custom colorbar for width with log scale
+    # Only use powers of 2 for the colorbar
+    max_width = max(logs_df['width'])
+    # Define power-of-2 ticks
+    nice_widths = [2**i for i in range(0, max_width.bit_length())]  # Covers up to max_width
+    log_norm = LogNorm(vmin=min(nice_widths), vmax=max(nice_widths))
+
+    # Create figure and axes
+    sm = plt.cm.ScalarMappable(cmap="viridis", norm=log_norm)
+    sm.set_array([])
+
+    # Create colorbar
+    cbar = fig.colorbar(sm, ax=ax, label='Width', orientation='vertical', pad=0.01)
+
+    # Set colorbar ticks and labels at powers of 2
+    cbar.set_ticks(nice_widths)
+    cbar.set_ticklabels([f"$2^{int(np.log2(tick))}$" for tick in nice_widths])
+
+    # Adjust layout and save the figure
+    plt.tight_layout()
+    os.makedirs(os.path.dirname(cfg.flow_sweep.save_file), exist_ok=True)
+    plt.savefig(cfg.flow_sweep.save_file, dpi=300)
+
+    # Show the plot (optional)
+    plt.show()
+
+
 def linear_decay_lr(step, num_iterations, learning_rate):
     return learning_rate * (1 - step / num_iterations)
 

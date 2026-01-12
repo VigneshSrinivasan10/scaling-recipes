@@ -36,3 +36,38 @@ sweep:
   lr_range: [-10, -1]
   lr_intervals: 10
   save_file: sweep_plots/${model.parametrization}_${model.width}_lr${trainer.optimizer.lr}.png
+
+# Flow Matching Configuration
+flow_model:
+  _target_: scaling_recipes.model.FlowMLP
+  n_features: 784
+  width: 32
+  n_blocks: 5
+  input_mult: 1
+  output_mult: 1
+  parametrization: mup
+
+flow_trainer:
+  max_epochs: 25
+  loss:
+    _target_: scaling_recipes.loss.ConditionalFlowMatchingLoss
+    sigma_min: 1e-4
+  optimizer:
+    _target_: torch.optim.AdamW
+    lr: 0.001
+    weight_decay: 0.001
+    lr_scheduler: linear_decay
+    gradient_clip: 1.0
+
+flow_logger:
+  _target_: scaling_recipes.logger.Logger
+  log_interval_epochs: 1
+  log_dir: logs/mnist_flow/${flow_model.parametrization}_${flow_model.width}_lr${flow_trainer.optimizer.lr}
+  loss_dir: loss
+  ckpt_dir: ckpt
+
+flow_sweep:
+  widths: [8, 16, 32, 64, 128]
+  lr_range: [-10, -1]
+  lr_intervals: 10
+  save_file: sweep_plots/flow_${flow_model.parametrization}_sweep.png

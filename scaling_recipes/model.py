@@ -23,28 +23,44 @@ class ZeroToOneTimeEmbedding(nn.Module):
         return emb
 
 class FlowMLP(FlowModel):
-    def __init__(self, n_features=2, width=10, n_blocks=5, nonlin=F.relu, output_mult=1.0, input_mult=1.0):
+    def __init__(self, n_features=784, width=32, n_blocks=5, nonlin=F.relu, output_mult=1.0, input_mult=1.0, parametrization="mup"):
         super().__init__()
 
         self.nonlin = nonlin
         self.input_mult = input_mult
         self.output_mult = output_mult
+        self.parametrization = parametrization
+        self.n_features = n_features
 
         self.n_blocks = n_blocks
-        self.time_embedding_size = width - n_features
-        
+        self.time_embedding_size = width // 4  # Use 1/4 of width for time embedding
+
         self.time_embedding = ZeroToOneTimeEmbedding(self.time_embedding_size)
+
+        # First block maps from n_features + time_embedding_size to width
         blocks = []
-        for _ in range(self.n_blocks):
+        blocks.append(nn.Sequential(
+            nn.Linear(n_features + self.time_embedding_size, width, bias=False),
+            nn.SiLU(),
+        ))
+
+        # Subsequent blocks preserve width through residual connections
+        for _ in range(self.n_blocks - 1):
             blocks.append(nn.Sequential(
                 nn.Linear(width, width, bias=False),
                 nn.SiLU(),
             ))
         self.blocks = nn.ModuleList(blocks)
         self.final = nn.Linear(width, n_features, bias=False)
-        self.reset_parameters()
 
-    def reset_parameters(self, base_std=0.02) -> None:
+        if self.parametrization == "mup":
+            self.reset_parameters_mup()
+        elif self.parametrization == "sp":
+            self.reset_parameters_sp()
+        else:
+            raise ValueError(f"Invalid parametrization: {self.parametrization}")
+
+    def reset_parameters_mup(self, base_std=0.02) -> None:
         # init all weights with fan_in / 1024 * base_std
         for n, p in self.named_parameters():
             skip_list = ["final"]
@@ -54,15 +70,27 @@ class FlowMLP(FlowModel):
         # init final layer with zeros
         nn.init.zeros_(self.final.weight)
 
+    def reset_parameters_sp(self) -> None:
+        for n, p in self.named_parameters():
+            nn.init.xavier_normal_(p.data)
+        nn.init.zeros_(self.final.weight)
+
     def forward(self, X, time=None):
         if time is None:
             time = torch.rand(X.shape[0], device=X.device)
-        X = torch.cat([X, self.time_embedding(time)], axis=1)
-        for block in self.blocks:
+        time_emb = self.time_embedding(time)
+        X = torch.cat([X, time_emb], axis=1)
+
+        # First block
+        X = self.blocks[0](X)
+
+        # Residual blocks
+        for block in self.blocks[1:]:
             X = X + block(X)
+
         X = self.final(X)
         return X
-    
+
     def configure_optimizers(self, weight_decay, learning_rate, betas):
         no_decay_name_list = ["bias", "norm"]
 

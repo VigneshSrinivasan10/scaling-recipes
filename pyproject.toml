@@ -24,8 +24,14 @@ dependencies = [
 packages = ["scaling_recipes"]  # Specify only the package(s) you want
 
 [project.scripts]
-train-flow-matching = "scaling_recipes.main:train"
-evaluate = "scaling_recipes.main:evaluate" 
+train = "scaling_recipes.main:train"
+evaluate = "scaling_recipes.main:evaluate"
 train_and_evaluate = "scaling_recipes.main:train_and_evaluate"
 sweep = "scaling_recipes.main:sweep_train_and_evaluate"
-sweep_evaluate = "scaling_recipes:main.sweep_evaluate"
+sweep_evaluate = "scaling_recipes.main:sweep_evaluate"
+
+# Flow Matching Commands
+train_flow = "scaling_recipes.main:train_flow"
+evaluate_flow = "scaling_recipes.main:evaluate_flow"
+sweep_flow = "scaling_recipes.main:sweep_train_and_evaluate_flow"
+sweep_evaluate_flow = "scaling_recipes.main:sweep_evaluate_flow"

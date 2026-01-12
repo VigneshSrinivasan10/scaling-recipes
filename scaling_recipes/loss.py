@@ -4,8 +4,8 @@ class ConditionalFlowMatchingLoss:
     def __init__(self, sigma_min=1e-4):
         self.sigma_min = sigma_min
 
-    def __call__(self, flow_model, data):
-        x = next(iter(data))
+    def __call__(self, flow_model, x, y=None):
+        # x is the data, y is ignored (for compatibility with dataloader)
         t = torch.rand(x.shape[0], device=x.device)
         noise = torch.randn_like(x)
 
