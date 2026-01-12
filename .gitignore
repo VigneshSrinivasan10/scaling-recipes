@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints
+
+# Data and logs
+data/
+logs/
+*.log
+
+# Model checkpoints
+*.pt
+*.pth
+*.ckpt
+
+# Plots and outputs
+*.png
+*.jpg
+*.mp4
+!flow_matching.png
+!README.md
+
+# Environment
+.env
+venv/
+env/
+ENV/
